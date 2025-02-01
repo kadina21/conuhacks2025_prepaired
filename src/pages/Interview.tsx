@@ -5,7 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Mic, MicOff, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Interview = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -34,7 +34,22 @@ const Interview = () => {
         body: { prompt: userResponse },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a quota error
+        if (error.status === 402) {
+          toast({
+            title: "API Quota Exceeded",
+            description: "The AI service is currently unavailable due to quota limits. Please try again later.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
       setAiResponse(data.response);
       setUserResponse("");
@@ -42,7 +57,7 @@ const Interview = () => {
       console.error('Error:', error);
       toast({
         title: "Error",
-        description: "Failed to get AI response. Please try again.",
+        description: "Failed to get AI response. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -106,7 +121,7 @@ const Interview = () => {
                 className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg rounded-full flex items-center gap-2"
               >
                 <Send className="w-5 h-5" />
-                Submit Response
+                {isLoading ? 'Processing...' : 'Submit Response'}
               </Button>
             </div>
           </CardContent>

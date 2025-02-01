@@ -35,22 +35,41 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${await response.text()}`);
+      const error = await response.json();
+      console.error('OpenAI API error:', error);
+      
+      // Check specifically for quota errors
+      if (error.error?.code === 'insufficient_quota') {
+        return new Response(
+          JSON.stringify({
+            error: "OpenAI API quota exceeded. Please check your billing details or try again later."
+          }),
+          {
+            status: 402,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+      
+      throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
     }
 
     const data = await response.json();
-    return new Response(JSON.stringify({ 
-      response: data.choices[0].message.content 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ response: data.choices[0].message.content }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in chat-with-ai function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
+      JSON.stringify({ 
+        error: "An error occurred while processing your request. Please try again later." 
+      }),
+      {
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
