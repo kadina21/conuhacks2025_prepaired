@@ -1,6 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+const HF_ACCESS_TOKEN = Deno.env.get('HUGGING_FACE_ACCESS_TOKEN');
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -15,48 +17,41 @@ serve(async (req) => {
   try {
     const { prompt } = await req.json();
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are an expert interviewer helping candidates practice for job interviews. Provide constructive feedback and follow-up questions.'
-          },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-      }),
-    });
+    // Using Hugging Face's Meta Llama 2 model
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/meta-llama/Llama-2-7b-chat-hf",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${HF_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inputs: `<s>[INST] You are an expert interviewer helping candidates practice for job interviews. Provide constructive feedback and follow-up questions.
+
+Here is the candidate's response: ${prompt} [/INST]`,
+          parameters: {
+            max_length: 1000,
+            temperature: 0.7,
+            top_p: 0.95,
+            repetition_penalty: 1.15
+          }
+        }),
+      }
+    );
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('OpenAI API error:', error);
-      
-      // Check specifically for quota errors
-      if (error.error?.code === 'insufficient_quota') {
-        return new Response(
-          JSON.stringify({
-            error: "OpenAI API quota exceeded. Please check your billing details or try again later."
-          }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-      
-      throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
+      console.error('Hugging Face API error:', error);
+      throw new Error(`Hugging Face API error: ${JSON.stringify(error)}`);
     }
 
     const data = await response.json();
+    // Extract the generated text from the response
+    const generatedText = data[0].generated_text.split('[/INST]')[1].trim();
+
     return new Response(
-      JSON.stringify({ response: data.choices[0].message.content }),
+      JSON.stringify({ response: generatedText }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
