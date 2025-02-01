@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { Mic, MicOff, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import Stopwatch from "@/components/Stopwatch";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import { useStopwatch } from "react-timer-hook";
 
 const Interview = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -40,17 +40,25 @@ const Interview = () => {
     }
   };
 
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
+  const { transcript, listening, browserSupportsSpeechRecognition } =
+    useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
     return <span>Browser doesn't support speech recognition.</span>;
     // TODO: render a textarea input instead
   }
+
+  const { seconds, minutes, start, pause } = useStopwatch();
+
+  const handleClick = () => {
+    if (!listening) {
+      SpeechRecognition.startListening();
+      start();
+    } else {
+      SpeechRecognition.stopListening();
+      pause();
+    }
+  };
 
   // Fetch AI feedback for user's response
   const handleSubmit = async () => {
@@ -110,27 +118,18 @@ const Interview = () => {
               <p className="text-lg font-medium mb-2">Current Question:</p>
               <p className="text-gray-700">{aiQuestion}</p>
             </div>
-
             {aiResponse && (
               <div className="bg-blue-50 p-6 rounded-lg">
                 <p className="text-lg font-medium mb-2">AI Feedback:</p>
                 <p className="text-gray-700">{aiResponse}</p>
               </div>
             )}
-
-            <Stopwatch />
-
-            {/* <Dictaphone /> */}
-
-            {transcript}
-
+            <p>Your response: {transcript}</p>
+            <br />
+            <span>{minutes}</span>:<span>{seconds}</span>
             <div className="flex justify-center gap-4">
               <Button
-                onClick={
-                  listening
-                    ? SpeechRecognition.stopListening
-                    : SpeechRecognition.startListening
-                }
+                onClick={handleClick}
                 className={`${
                   listening
                     ? "bg-red-500 hover:bg-red-600"
