@@ -11,9 +11,9 @@ const Aiai = () => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    "model": "llama3:latest", // Make sure this matches your installed model
+                    "model": "llama3:latest",
                     "prompt": "Why is the sky blue?",
-                    "stream": false // Disable streaming for easier debugging
+                    "stream": false
                 }),
             });
 
@@ -22,7 +22,10 @@ const Aiai = () => {
             }
 
             const data = await res.json();
-            setResponse(data.response || "No valid response"); // Ensure safe state update
+            console.log("API Response:", data);
+
+            // ✅ Extract the 'response' field from API data
+            setResponse(data.response || "No valid response");
         } catch (error) {
             console.error("Error:", error);
             setResponse("Error fetching response");
@@ -30,7 +33,7 @@ const Aiai = () => {
     }
 
     useEffect(() => {
-        postData(); // Call API when component mounts
+        postData();
     }, []);
 
     return (
