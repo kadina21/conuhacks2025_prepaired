@@ -24,7 +24,7 @@ const Interview = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "llama3:latest",
-          prompt: "Give me a challenging interview question.",
+          prompt: "Please generate a behavioral interview question without saying here is...",
           stream: false,
         }),
       });
@@ -78,7 +78,8 @@ const Interview = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "llama3:latest",
-          prompt: `Evaluate this interview response: ${transcript}`,
+          prompt: `Please evaluate this interview answer like you were directly talking to the interviewee. When giving your answer, no need to acknowledge the fact that you will do what I asked. Please give the answer directly and make it succinct
+           ${transcript}`,
           stream: false,
         }),
       });
