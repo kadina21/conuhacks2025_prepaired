@@ -40,15 +40,42 @@ Here is the candidate's response: ${prompt} [/INST]`,
       }
     );
 
+    const data = await response.json();
+    console.log('Hugging Face API response:', data);
+
+    // Check for error response from Hugging Face
     if (!response.ok) {
-      const error = await response.json();
-      console.error('Hugging Face API error:', error);
-      throw new Error(`Hugging Face API error: ${JSON.stringify(error)}`);
+      // Check if model is still loading
+      if (data.error?.includes('Model is loading')) {
+        return new Response(
+          JSON.stringify({
+            error: "The AI model is currently loading. Please try again in a few seconds."
+          }),
+          {
+            status: 503,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      // Handle other API errors
+      throw new Error(`Hugging Face API error: ${JSON.stringify(data)}`);
     }
 
-    const data = await response.json();
-    // Extract the generated text from the response
-    const generatedText = data[0].generated_text.split('[/INST]')[1].trim();
+    // Handle the response based on Hugging Face's format
+    let generatedText;
+    if (Array.isArray(data) && data[0]?.generated_text) {
+      // Extract text after the instruction prompt
+      generatedText = data[0].generated_text.split('[/INST]')[1]?.trim();
+    } else if (typeof data === 'object' && data.generated_text) {
+      // Alternative response format
+      generatedText = data.generated_text.split('[/INST]')[1]?.trim();
+    }
+
+    if (!generatedText) {
+      console.error('Unexpected API response format:', data);
+      throw new Error('Failed to extract generated text from API response');
+    }
 
     return new Response(
       JSON.stringify({ response: generatedText }),
@@ -61,7 +88,7 @@ Here is the candidate's response: ${prompt} [/INST]`,
     console.error('Error in chat-with-ai function:', error);
     return new Response(
       JSON.stringify({ 
-        error: "An error occurred while processing your request. Please try again later." 
+        error: "An error occurred while processing your request. Please try again in a few seconds." 
       }),
       {
         status: 500,
