@@ -15,9 +15,17 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt } = await req.json();
+    console.log('Starting chat-with-ai function');
+    
+    if (!HF_ACCESS_TOKEN) {
+      console.error('Missing Hugging Face access token');
+      throw new Error('Configuration error: Missing API token');
+    }
 
-    // Using Hugging Face's Meta Llama 2 model
+    const { prompt } = await req.json();
+    console.log('Received prompt:', prompt);
+
+    console.log('Sending request to Hugging Face API...');
     const response = await fetch(
       "https://api-inference.huggingface.co/models/meta-llama/Llama-2-7b-chat-hf",
       {
@@ -40,6 +48,7 @@ Here is the candidate's response: ${prompt} [/INST]`,
       }
     );
 
+    console.log('Hugging Face API status:', response.status);
     const data = await response.json();
     console.log('Hugging Face API response:', data);
 
@@ -47,6 +56,7 @@ Here is the candidate's response: ${prompt} [/INST]`,
     if (!response.ok) {
       // Check if model is still loading
       if (data.error?.includes('Model is loading')) {
+        console.log('Model is still loading, returning 503');
         return new Response(
           JSON.stringify({
             error: "The AI model is currently loading. Please try again in a few seconds."
@@ -59,6 +69,7 @@ Here is the candidate's response: ${prompt} [/INST]`,
       }
 
       // Handle other API errors
+      console.error('Hugging Face API error:', data);
       throw new Error(`Hugging Face API error: ${JSON.stringify(data)}`);
     }
 
@@ -67,16 +78,19 @@ Here is the candidate's response: ${prompt} [/INST]`,
     if (Array.isArray(data) && data[0]?.generated_text) {
       // Extract text after the instruction prompt
       generatedText = data[0].generated_text.split('[/INST]')[1]?.trim();
+      console.log('Extracted text from array format');
     } else if (typeof data === 'object' && data.generated_text) {
       // Alternative response format
       generatedText = data.generated_text.split('[/INST]')[1]?.trim();
+      console.log('Extracted text from object format');
     }
 
     if (!generatedText) {
-      console.error('Unexpected API response format:', data);
+      console.error('Failed to extract generated text. Response data:', data);
       throw new Error('Failed to extract generated text from API response');
     }
 
+    console.log('Successfully generated response');
     return new Response(
       JSON.stringify({ response: generatedText }),
       {
@@ -86,9 +100,11 @@ Here is the candidate's response: ${prompt} [/INST]`,
 
   } catch (error) {
     console.error('Error in chat-with-ai function:', error);
+    // Return a more specific error message based on the error type
     return new Response(
       JSON.stringify({ 
-        error: "An error occurred while processing your request. Please try again in a few seconds." 
+        error: error.message || "An error occurred while processing your request. Please try again in a few seconds.",
+        details: error.toString()
       }),
       {
         status: 500,
