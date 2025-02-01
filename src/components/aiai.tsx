@@ -12,7 +12,7 @@ const Aiai = () => {
                 },
                 body: JSON.stringify({
                     "model": "llama3:latest",
-                    "prompt": "Why is the sky blue?",
+                    "prompt": "say hi in french", //hardcode
                     "stream": false
                 }),
             });
@@ -38,8 +38,8 @@ const Aiai = () => {
 
     return (
         <>
-            <h1>AI Response:</h1>
-            <p>{response}</p>
+            {/* <h1>AI Response:</h1>
+            <p>{response}</p> */}
         </>
     );
 };
