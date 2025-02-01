@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Aiai from "./aiai";
 
 export const Hero = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export const Hero = () => {
         Start Practice Interview
         <ArrowRight className="w-5 h-5" />
       </Button>
+      <Aiai />
     </div>
   );
 };
