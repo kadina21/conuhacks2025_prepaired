@@ -3,20 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { Mic, MicOff, Send } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import Stopwatch from "@/components/Stopwatch";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 
 const Interview = () => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [userResponse, setUserResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [aiQuestion, setAiQuestion] = useState("Generating a question...");
   const [aiResponse, setAiResponse] = useState("");
   const { toast } = useToast();
-
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-  };
 
   // Fetch AI-generated question
   const fetchAiQuestion = async () => {
@@ -43,9 +40,21 @@ const Interview = () => {
     }
   };
 
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
+
+  if (!browserSupportsSpeechRecognition) {
+    return <span>Browser doesn't support speech recognition.</span>;
+    // TODO: render a textarea input instead
+  }
+
   // Fetch AI feedback for user's response
   const handleSubmit = async () => {
-    if (!userResponse.trim()) {
+    if (transcript.length === 0) {
       toast({
         title: "Error",
         description: "Please provide a response.",
@@ -61,7 +70,7 @@ const Interview = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "llama3:latest",
-          prompt: `Evaluate this interview response: ${userResponse}`,
+          prompt: `Evaluate this interview response: ${transcript}`,
           stream: false,
         }),
       });
@@ -69,7 +78,6 @@ const Interview = () => {
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
       const data = await res.json();
       setAiResponse(data.response || "No feedback generated.");
-      setUserResponse(""); // Clear input after submitting
     } catch (error) {
       console.error("Error:", error);
       toast({
@@ -110,23 +118,26 @@ const Interview = () => {
               </div>
             )}
 
-            <Textarea
-              placeholder="Type your response here..."
-              value={userResponse}
-              onChange={(e) => setUserResponse(e.target.value)}
-              className="min-h-[120px]"
-            />
+            <Stopwatch />
+
+            {/* <Dictaphone /> */}
+
+            {transcript}
 
             <div className="flex justify-center gap-4">
               <Button
-                onClick={toggleRecording}
+                onClick={
+                  listening
+                    ? SpeechRecognition.stopListening
+                    : SpeechRecognition.startListening
+                }
                 className={`${
-                  isRecording
+                  listening
                     ? "bg-red-500 hover:bg-red-600"
                     : "bg-secondary hover:bg-secondary/90"
                 } px-8 py-6 text-lg rounded-full flex items-center gap-2`}
               >
-                {isRecording ? (
+                {listening ? (
                   <>
                     <MicOff className="w-5 h-5" />
                     Stop Recording
@@ -141,7 +152,7 @@ const Interview = () => {
 
               <Button
                 onClick={handleSubmit}
-                disabled={isLoading || !userResponse.trim()}
+                disabled={isLoading || transcript.length == 0}
                 className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg rounded-full flex items-center gap-2"
               >
                 <Send className="w-5 h-5" />
