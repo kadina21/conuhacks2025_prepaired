@@ -17,9 +17,18 @@ serve(async (req) => {
   try {
     console.log('Starting chat-with-ai function');
     
+    // Validate Hugging Face token
     if (!HF_ACCESS_TOKEN) {
       console.error('Missing Hugging Face access token');
-      throw new Error('Configuration error: Missing API token');
+      return new Response(
+        JSON.stringify({ 
+          error: "Configuration error: Missing Hugging Face API token. Please ensure it is properly set in the environment variables.",
+        }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     const { prompt } = await req.json();
@@ -49,6 +58,21 @@ Here is the candidate's response: ${prompt} [/INST]`,
     );
 
     console.log('Hugging Face API status:', response.status);
+    
+    // Handle authentication errors specifically
+    if (response.status === 401) {
+      console.error('Hugging Face API authentication failed');
+      return new Response(
+        JSON.stringify({ 
+          error: "Authentication failed with Hugging Face API. Please check if your API token is valid.",
+        }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const data = await response.json();
     console.log('Hugging Face API response:', data);
 
