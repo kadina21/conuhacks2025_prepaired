@@ -41,7 +41,7 @@ const RoleSelect = () => {
         </Select>
         {selectedRole && (
           <Button
-            onClick={() => navigate("/interview")}
+            onClick={() => navigate("/interview", { state: { selectedRole } })}
             className="bg-primary hover:bg-primary/90 mt-12 px-8 py-6 text-lg rounded-full flex items-center gap-2 animate-fadeIn"
           >
             Start Practice Interview
