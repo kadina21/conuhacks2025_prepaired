@@ -70,9 +70,13 @@ const Interview = () => {
       });
       return;
     }
-
+  
     setIsLoading(true);
     try {
+      // Save the response to MongoDB
+      await saveResponse(aiQuestion, transcript);
+  
+      // Fetch AI feedback
       const res = await fetch("http://localhost:11434/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,7 +87,7 @@ const Interview = () => {
           stream: false,
         }),
       });
-
+  
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
       const data = await res.json();
       setAiResponse(data.response || "No feedback generated.");
@@ -96,6 +100,21 @@ const Interview = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+  const saveResponse = async (question, answer) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/save-response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, answer }),
+      });
+  
+      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+      const data = await res.json();
+      console.log(data.message); // "Response saved successfully!"
+    } catch (error) {
+      console.error("Error saving response:", error);
     }
   };
 
@@ -164,6 +183,10 @@ const Interview = () => {
       </div>
     </div>
   );
+
+
 };
+
+
 
 export default Interview;
