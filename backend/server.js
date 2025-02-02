@@ -26,7 +26,14 @@ const responseSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
 });
 
+const authSchema = new mongoose.Schema({
+    username: String,
+    password: String,
+  });
+
 const Response = mongoose.model("Response", responseSchema);
+
+const Auth = mongoose.model("Auth", authSchema); //to create
 
 // API endpoint to save user responses
 app.post("/api/save-response", async (req, res) => {
@@ -41,6 +48,44 @@ app.post("/api/save-response", async (req, res) => {
     res.status(500).json({ message: "Failed to save response." });
   }
 });
+
+// API endpoint to save user responses
+app.post("/api/sign-up", async (req, res) => {
+    const { question, answer } = req.body;
+  
+    try {
+      const newAuth = new Auth({ username, password });
+      await newAuth.save();
+      res.status(201).json({ message: "Account created successfully!" });
+    } catch (error) {
+      console.error("Error creating account:", error);
+      res.status(500).json({ message: "Failed to create account." });
+    }
+});
+
+
+// API endpoint to log a user to the website
+app.get("/api/login", async (req, res) => {
+  const { username, password } = req.query;
+
+  try {
+    const user = await Auth.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.password !== password) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    res.status(200).json({ message: "Login successful" });
+  } catch (error) {
+    console.error("Error during login:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 
 // Start the server
 app.listen(PORT, () => {
