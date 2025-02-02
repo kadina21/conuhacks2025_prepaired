@@ -80,7 +80,7 @@ const Auth = () => {
       />
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Welcome to InterviewAI</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Welcome to PrepAIred</CardTitle>
           <CardDescription className="text-center">Sign in or create an account to continue</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
