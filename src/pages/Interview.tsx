@@ -1,19 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { Mic, MicOff, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
+import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { useStopwatch } from "react-timer-hook";
+import Webcam from "react-webcam";
 
 const Interview = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [aiQuestion, setAiQuestion] = useState("Generating a question...");
   const [aiResponse, setAiResponse] = useState("");
   const { toast } = useToast();
+  const [recording, setRecording] = useState(false);
+  const webcamRef = useRef<Webcam>(null);
 
   // Fetch AI-generated question
   const fetchAiQuestion = async () => {
@@ -24,7 +25,7 @@ const Interview = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "llama3:latest",
-          prompt: "Generate a behavioral interview question without saying here is... ",
+          prompt: "Give me a challenging interview question.",
           stream: false,
         }),
       });
@@ -33,19 +34,17 @@ const Interview = () => {
       const data = await res.json();
       setAiQuestion(data.response || "Failed to generate a question.");
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error fetching AI question:", error);
       setAiQuestion("Error fetching question.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const { transcript, listening, browserSupportsSpeechRecognition } =
-    useSpeechRecognition();
+  const { transcript, listening, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
     return <span>Browser doesn't support speech recognition.</span>;
-    // TODO: render a textarea input instead
   }
 
   const { seconds, minutes, start, pause } = useStopwatch();
@@ -54,52 +53,14 @@ const Interview = () => {
     if (!listening) {
       SpeechRecognition.startListening();
       start();
+      setRecording(true);
     } else {
       SpeechRecognition.stopListening();
       pause();
+      setRecording(false);
     }
   };
 
-  // Fetch AI feedback for user's response
-  const handleSubmit = async () => {
-    if (transcript.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please provide a response.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const res = await fetch("http://localhost:11434/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama3:latest",
-          prompt: `You're currently roleplaying as an interviewer. Evaluate the answer like you were directly talking to the interviewee. When giving your answer, no need to acknowledge the fact that you will do what I asked. Please give the answer directly and make it succinct. if the user's response is too short, don't try to evaluate their response. simply say that there was not enough context and they should provide more detail. give a clarity and quality score of the answer.
-           ${transcript}`,
-          stream: false,
-        }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-      const data = await res.json();
-      setAiResponse(data.response || "No feedback generated.");
-    } catch (error) {
-      console.error("Error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to get AI response.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch question on first render
   useEffect(() => {
     fetchAiQuestion();
   }, []);
@@ -149,16 +110,22 @@ const Interview = () => {
                   </>
                 )}
               </Button>
-
               <Button
-                onClick={handleSubmit}
-                disabled={isLoading || transcript.length == 0}
+                onClick={fetchAiQuestion}
+                disabled={isLoading || transcript.length === 0}
                 className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg rounded-full flex items-center gap-2"
               >
                 <Send className="w-5 h-5" />
                 Submit Response
               </Button>
             </div>
+            {recording && (
+              <Webcam
+                audio={true}
+                ref={webcamRef}
+                className="w-full h-auto"
+              />
+            )}
           </CardContent>
         </Card>
       </div>
