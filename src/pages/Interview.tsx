@@ -60,6 +60,28 @@ const Interview = () => {
     }
   };
 
+  // Save user response to MongoDB
+  const saveResponse = async (question, answer) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/save-response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, answer }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+      const data = await res.json();
+      console.log(data.message); // "Response saved successfully!"
+    } catch (error) {
+      console.error("Error saving response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save response.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Fetch AI feedback for user's response
   const handleSubmit = async () => {
     if (transcript.length === 0) {
@@ -70,12 +92,12 @@ const Interview = () => {
       });
       return;
     }
-  
+
     setIsLoading(true);
     try {
       // Save the response to MongoDB
       await saveResponse(aiQuestion, transcript);
-  
+
       // Fetch AI feedback
       const res = await fetch("http://localhost:11434/api/generate", {
         method: "POST",
@@ -87,7 +109,7 @@ const Interview = () => {
           stream: false,
         }),
       });
-  
+
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
       const data = await res.json();
       setAiResponse(data.response || "No feedback generated.");
@@ -100,21 +122,6 @@ const Interview = () => {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-  const saveResponse = async (question, answer) => {
-    try {
-      const res = await fetch("http://localhost:5000/api/save-response", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, answer }),
-      });
-  
-      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-      const data = await res.json();
-      console.log(data.message); // "Response saved successfully!"
-    } catch (error) {
-      console.error("Error saving response:", error);
     }
   };
 
@@ -171,7 +178,7 @@ const Interview = () => {
 
               <Button
                 onClick={handleSubmit}
-                disabled={isLoading || transcript.length == 0}
+                disabled={isLoading || transcript.length === 0}
                 className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg rounded-full flex items-center gap-2"
               >
                 <Send className="w-5 h-5" />
@@ -183,10 +190,6 @@ const Interview = () => {
       </div>
     </div>
   );
-
-
 };
-
-
 
 export default Interview;
