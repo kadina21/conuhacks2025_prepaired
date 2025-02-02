@@ -11,12 +11,10 @@ export const Navbar = () => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -41,33 +39,53 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="border-b py-4">
-      <div className="container flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate("/")}>
-            InterviewAI
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          {user ? (
-            <>
-              <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-                Dashboard
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center gap-2">
+            <span 
+              className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent cursor-pointer" 
+              onClick={() => navigate("/")}
+            >
+              InterviewAI
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {user ? (
+              <>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate("/dashboard")}
+                  className="hover:bg-primary/5"
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  onClick={() => navigate("/interview")} 
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Practice Now
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSignOut}
+                  className="hover:bg-primary/5"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Button 
+                onClick={() => navigate("/auth")} 
+                className="bg-primary hover:bg-primary/90"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Sign In
               </Button>
-              <Button onClick={() => navigate("/interview")} className="bg-secondary hover:bg-secondary/90">
-                Practice Now
-              </Button>
-              <Button variant="ghost" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => navigate("/auth")} className="bg-primary hover:bg-primary/90">
-              <User className="h-4 w-4 mr-2" />
-              Sign In
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </nav>
