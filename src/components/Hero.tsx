@@ -7,11 +7,19 @@ export const Hero = () => {
 
   return (
     <div className="relative min-h-[80vh] flex flex-col items-center justify-center text-center px-4">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 -z-10" />
+      {/* Background image with overlay */}
+      <div 
+        className="absolute inset-0 -z-20 bg-cover bg-center bg-no-repeat opacity-20"
+        style={{
+          backgroundImage: 'url("https://images.unsplash.com/photo-1500673922987-e212871fec22")'
+        }}
+      />
+      
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10 -z-10" />
       
       {/* Content with animations */}
-      <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+      <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn backdrop-blur-sm p-8 rounded-2xl">
         <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           Master Your Interview Skills with AI
         </h1>
