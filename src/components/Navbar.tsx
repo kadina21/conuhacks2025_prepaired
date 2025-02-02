@@ -68,6 +68,9 @@ export const Navbar = () => {
               Sign In
             </Button>
           )}
+          <Button variant="ghost" onClick={() => navigate("/history")}>
+            History
+          </Button>
         </div>
       </div>
     </nav>
