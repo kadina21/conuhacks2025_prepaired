@@ -49,7 +49,7 @@ app.post("/api/save-response", async (req, res) => {
 
 // API endpoint to save user responses
 app.post("/api/sign-up", async (req, res) => {
-    const { question, answer } = req.body;
+    const { username, password } = req.body;
   
     try {
       const newAuth = new Auth({ username, password });
@@ -63,20 +63,24 @@ app.post("/api/sign-up", async (req, res) => {
 
 
 // API endpoint to log a user to the website
-app.get("/api/login", async (req, res) => {
+app.post("/api/login", async (req, res) => {
   const { username, password } = req.query;
+  console.log("Sign-in request body: ", req.body)
 
   try {
+    console.log("We're in the try now")
     const user = await Auth.findOne({ username });
 
     if (!user) {
+      console.log("User not found oopsie")
       return res.status(404).json({ message: "User not found" });
     }
 
     if (user.password !== password) {
+      console.log("Password baaad")
       return res.status(401).json({ message: "Invalid credentials" });
     }
-
+    console.log("Yaaaay login worked!")
     res.status(200).json({ message: "Login successful" });
   } catch (error) {
     console.error("Error during login:", error);
