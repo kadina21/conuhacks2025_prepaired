@@ -15,7 +15,7 @@ export const Hero = () => {
         your chances of landing your dream job.
       </p>
       <Button
-        onClick={() => navigate("/interview")}
+        onClick={() => navigate("/role")}
         className="bg-secondary hover:bg-secondary/90 text-white px-8 py-6 text-lg rounded-full flex items-center gap-2"
       >
         Start Practice Interview
