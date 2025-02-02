@@ -11,7 +11,6 @@ import { useStopwatch } from "react-timer-hook";
 import { useLocation } from "react-router-dom";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { getFeedback, getQuestion } from "@/constants";
-import { supabase } from "@/integrations/supabase/client";
 
 const Interview = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -241,7 +240,6 @@ const Interview = () => {
             </CardContent>
           </Card>
         )}
-
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 const Dashboard = () => {
   const [advice, setAdvice] = useState("Fetching your AI coach's advice...");
+  const INTERVIEW_DAYS_AWAY = 5;
 
   const fetchAdvice = async () => {
     try {
@@ -62,7 +63,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
-        <h1 className="text-3xl font-bold mb-8">Extra Help</h1>
+        <h1 className="text-3xl font-bold mb-8">Advice from your Coach</h1>
+        <h2 className="text-xl font-bold mb-4">
+          Your interview is coming up in {INTERVIEW_DAYS_AWAY} days!
+        </h2>
         <p>{advice}</p>
       </div>
     </div>
