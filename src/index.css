@@ -94,8 +94,13 @@
   * {
     @apply border-border;
   }
+  
+  h1, h2, h3 {
+    font-family: "Montserrat";
+  }
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Poppins";
   }
 }
