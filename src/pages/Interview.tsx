@@ -10,6 +10,7 @@ import SpeechRecognition, {
 import { useStopwatch } from "react-timer-hook";
 import { useLocation } from "react-router-dom";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { getFeedback, getQuestion } from "@/constants";
 
 const Interview = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -22,18 +23,8 @@ const Interview = () => {
 
   // Fetch AI-generated question
   const fetchAiQuestion = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // temporary timeout since i can't connect to API
     try {
-      const res = await fetch("http://localhost:11434/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama3:latest",
-          prompt:
-            "Generate a behavioral interview question without saying here is... ",
-          stream: false,
-        }),
-      });
+      const res = await getQuestion(selectedRole);
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
       const data = await res.json();
       setAiQuestion(data.response || "Failed to generate a question.");
@@ -45,11 +36,20 @@ const Interview = () => {
     }
   };
 
+  // Fetch question on first render
+  useEffect(() => {
+    fetchAiQuestion();
+  }, []);
+
   const { transcript, listening, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
 
   if (!browserSupportsSpeechRecognition) {
-    return <span>Browser doesn't support speech recognition.</span>;
+    toast({
+      title: "Error",
+      description: "This browser doesn't support speech recognition.",
+      variant: "destructive",
+    });
     // TODO: render a textarea input instead
   }
 
@@ -78,17 +78,7 @@ const Interview = () => {
 
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:11434/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama3:latest",
-          prompt: `You're currently roleplaying as an interviewer. Evaluate the answer like you were directly talking to the interviewee. When giving your answer, no need to acknowledge the fact that you will do what I asked. Please give the answer directly and make it succinct. if the user's response is too short, don't try to evaluate their response. simply say that there was not enough context and they should provide more detail. give a clarity and quality score of the answer.
-           ${transcript}`,
-          stream: false,
-        }),
-      });
-
+      const res = await getFeedback({ userResponse: transcript });
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
       const data = await res.json();
       setAiResponse(data.response || "No feedback generated.");
@@ -103,11 +93,6 @@ const Interview = () => {
       setIsLoading(false);
     }
   };
-
-  // Fetch question on first render
-  useEffect(() => {
-    fetchAiQuestion();
-  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
