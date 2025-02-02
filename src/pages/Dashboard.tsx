@@ -1,8 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { BarChart3, Clock, ThumbsUp } from "lucide-react";
+import { getAdvice } from "@/constants";
+import { useEffect, useState } from "react";
 
 const Dashboard = () => {
+  const [advice, setAdvice] = useState("Fetching your AI coach's advice...");
+
+  const fetchAdvice = async () => {
+    try {
+      const res = await getAdvice();
+      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+      const data = await res.json();
+      setAdvice(data.response || "Failed to fetch advice.");
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdvice();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -11,7 +30,9 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Interviews</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Interviews
+              </CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -20,7 +41,9 @@ const Dashboard = () => {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Duration</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Average Duration
+              </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -29,7 +52,9 @@ const Dashboard = () => {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overall Score</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Overall Score
+              </CardTitle>
               <ThumbsUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -37,6 +62,8 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+        <h1 className="text-3xl font-bold mb-8">Extra Help</h1>
+        <p>{advice}</p>
       </div>
     </div>
   );

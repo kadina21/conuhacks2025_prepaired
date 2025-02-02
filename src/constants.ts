@@ -39,3 +39,16 @@ export const getFeedback = async ({ userResponse }) => {
   });
   return res;
 };
+
+export const getAdvice = async () => {
+  const res = await fetch("http://localhost:11434/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: MY_MODEL,
+      prompt: `Pretend you're a coach to someone interviewing for tech jobs. Your platform is helping them do mock interviews and prepare for real interviews. Pretend you have access to all their interview history, with their performances, clarity and quality scores for responses, etc. Write a brief message to them to advise them on next steps, for example, "Given your interview history, it seems like you're doing great! Keep up the good work!". Always start with "Given your interview history" to make it seem like you're basing it off analyzed data. DON'T use placeholders for personal information, just don't mention any details like that. No preamble or intro, just return exactly what you'd say.`,
+      stream: false,
+    }),
+  });
+  return res;
+};
