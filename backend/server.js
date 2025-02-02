@@ -61,6 +61,16 @@ app.post("/api/sign-up", async (req, res) => {
     }
 });
 
+// API endpoint to fetch user responses
+app.get("/api/responses", async (req, res) => {
+  try {
+    const responses = await Response.find();
+    res.status(200).json(responses);
+  } catch (error) {
+    console.error("Error fetching responses:", error);
+    res.status(500).json({ message: "Failed to fetch responses." });
+  }
+});
 
 // API endpoint to log a user to the website
 app.post("/api/login", async (req, res) => {

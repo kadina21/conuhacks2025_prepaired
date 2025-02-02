@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import RoleSelect from "./pages/RoleSelect";
+import ResponseHistory from "./pages/ResponseHistory";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/interview" element={<Interview />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/history" element={<ResponseHistory />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
