@@ -1,4 +1,3 @@
-import "regenerator-runtime/runtime";
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
 import { Navbar } from "@/components/Navbar";

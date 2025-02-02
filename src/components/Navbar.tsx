@@ -45,7 +45,7 @@ export const Navbar = () => {
       <div className="container flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate("/")}>
-            PrepAIred
+            InterviewAI
           </span>
         </div>
         <div className="flex items-center gap-4">
