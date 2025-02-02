@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
-import { Mic, MicOff, Send } from "lucide-react";
+import { ArrowRight, Mic, MicOff, Send } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 import { useStopwatch } from "react-timer-hook";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { getFeedback, getQuestion } from "@/constants";
 
@@ -174,59 +174,70 @@ const Interview = () => {
                   </div>
                 </>
               )}
-              <div className="flex justify-center gap-4">
-                <Button
-                  onClick={handleClick}
-                  className={`${
-                    listening
-                      ? "bg-red-500 hover:bg-red-600"
-                      : "bg-secondary hover:bg-secondary/90"
-                  } px-8 py-6 text-lg rounded-full flex items-center gap-2`}
-                  disabled={listening}
-                >
-                  {listening ? (
-                    <>
-                      <MicOff className="w-5 h-5" />
-                      Stop Recording
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="w-5 h-5" />
-                      Start Recording
-                    </>
-                  )}
-                </Button>
+              {!aiFeedback && (
+                <div className="flex justify-center gap-4">
+                  <Button
+                    onClick={handleClick}
+                    className={`${
+                      listening
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-secondary hover:bg-secondary/90"
+                    } px-8 py-6 text-lg rounded-full flex items-center gap-2`}
+                    disabled={listening}
+                  >
+                    {listening ? (
+                      <>
+                        <MicOff className="w-5 h-5" />
+                        Stop Recording
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="w-5 h-5" />
+                        Start Recording
+                      </>
+                    )}
+                  </Button>
 
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isLoading || transcript.length == 0}
-                  className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg rounded-full flex items-center gap-2"
-                >
-                  <Send className="w-5 h-5" />
-                  Submit Response
-                </Button>
-
-                {aiFeedback && (
-                  <div className="bg-blue-50 p-6 rounded-lg">
-                    <p className="text-lg font-medium mb-2">AI Feedback:</p>
-                    <p className="text-gray-700">{aiFeedback}</p>
-                  </div>
-                )}
-
-                {(clarityScore !== null || qualityScore !== null) && (
-                  <div className="bg-blue-50 p-6 rounded-lg">
-                    <p className="text-lg font-medium mb-2">
-                      Evaluation Scores Out of 10:
-                    </p>
-                    <p className="text-gray-700">
-                      <strong>Clarity Score :</strong> {clarityScore ?? "N/A"}
-                    </p>
-                    <p className="text-gray-700">
-                      <strong>Quality Score:</strong> {qualityScore ?? "N/A"}
-                    </p>
-                  </div>
-                )}
-              </div>
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isLoading || transcript.length == 0}
+                    className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg rounded-full flex items-center gap-2"
+                  >
+                    <Send className="w-5 h-5" />
+                    Submit Response
+                  </Button>
+                </div>
+              )}
+              {aiFeedback && (
+                <div className="bg-blue-50 p-6 rounded-lg">
+                  <p className="text-lg font-medium mb-2">AI Feedback:</p>
+                  <p className="text-gray-700">{aiFeedback}</p>
+                </div>
+              )}
+              {(clarityScore !== null || qualityScore !== null) && (
+                <div className="bg-blue-50 p-6 rounded-lg">
+                  <p className="text-lg font-medium mb-2">
+                    Evaluation Scores Out of 10:
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Clarity Score :</strong> {clarityScore ?? "N/A"}
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Quality Score:</strong> {qualityScore ?? "N/A"}
+                  </p>
+                </div>
+              )}
+              {aiFeedback && (
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => window.location.reload()}
+                    className="bg-primary hover:bg-primary/90 mt-12 px-8 py-6 text-lg rounded-full flex items-center gap-2 animate-fadeIn"
+                  >
+                    Next Question
+                    <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
