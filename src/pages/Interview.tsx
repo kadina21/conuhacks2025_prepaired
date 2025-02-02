@@ -181,9 +181,9 @@ const Interview = () => {
             )}
 
             {(clarityScore !== null || qualityScore !== null) && (
-              <div className="bg-green-50 p-6 rounded-lg">
-                <p className="text-lg font-medium mb-2">Evaluation Scores:</p>
-                <p className="text-gray-700"><strong>Clarity Score:</strong> {clarityScore ?? "N/A"}</p>
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <p className="text-lg font-medium mb-2">Evaluation Scores Out of 10:</p>
+                <p className="text-gray-700"><strong>Clarity Score :</strong> {clarityScore ?? "N/A"}</p>
                 <p className="text-gray-700"><strong>Quality Score:</strong> {qualityScore ?? "N/A"}</p>
               </div>
             )}
