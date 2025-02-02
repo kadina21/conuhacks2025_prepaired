@@ -14,7 +14,7 @@ export const getQuestion = async ({ role }) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: MY_MODEL,
-      prompt: `Generate a behavioral interview question, for someone interviewing for a position of ${role}, without saying "here is" or any other preamble.`,
+      prompt: `Generate an interview question, for someone interviewing for a position of ${role}, without saying "here is" or any other preamble. This could be a behavioural question, or something slightly more technical. The question must be relevant to a ${role}.`,
       stream: false,
     }),
   });

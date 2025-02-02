@@ -8,7 +8,7 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 import { useStopwatch } from "react-timer-hook";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { getFeedback, getQuestion } from "@/constants";
 
@@ -18,7 +18,6 @@ const Interview = () => {
   const [aiFeedback, setAiFeedback] = useState("");
   const [clarityScore, setClarityScore] = useState(null);
   const [qualityScore, setQualityScore] = useState(null);
-
   const { toast } = useToast();
 
   const location = useLocation();
