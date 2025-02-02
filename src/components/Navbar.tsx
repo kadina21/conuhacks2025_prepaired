@@ -44,9 +44,12 @@ export const Navbar = () => {
     <nav className="border-b py-4">
       <div className="container flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-primary cursor-pointer" onClick={() => navigate("/")}>
+          <h1
+            className="text-2xl font-bold text-primary cursor-pointer"
+            onClick={() => navigate("/")}
+          >
             PrepAIred
-          </span>
+          </h1>
         </div>
         <div className="flex items-center gap-4">
           {user ? (
@@ -54,7 +57,10 @@ export const Navbar = () => {
               <Button variant="ghost" onClick={() => navigate("/dashboard")}>
                 Dashboard
               </Button>
-              <Button onClick={() => navigate("/interview")} className="bg-secondary hover:bg-secondary/90">
+              <Button
+                onClick={() => navigate("/interview")}
+                className="bg-secondary hover:bg-secondary/90"
+              >
                 Practice Now
               </Button>
               <Button variant="ghost" onClick={handleSignOut}>
@@ -63,7 +69,10 @@ export const Navbar = () => {
               </Button>
             </>
           ) : (
-            <Button onClick={() => navigate("/auth")} className="bg-primary hover:bg-primary/90">
+            <Button
+              onClick={() => navigate("/auth")}
+              className="bg-primary hover:bg-primary/90"
+            >
               <User className="h-4 w-4 mr-2" />
               Sign In
             </Button>
