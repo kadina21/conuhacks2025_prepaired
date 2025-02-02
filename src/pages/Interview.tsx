@@ -15,7 +15,10 @@ import { getFeedback, getQuestion } from "@/constants";
 const Interview = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [aiQuestion, setAiQuestion] = useState("Generating a question...");
-  const [aiResponse, setAiResponse] = useState("");
+  const [aiFeedback, setAiFeedback] = useState("");
+  const [clarityScore, setClarityScore] = useState(null);
+  const [qualityScore, setQualityScore] = useState(null);
+
   const { toast } = useToast();
 
   const location = useLocation();
@@ -65,6 +68,7 @@ const Interview = () => {
 
   const { seconds, minutes, start, pause, reset } = useStopwatch();
 
+  // Start/Stop Speech Recognition
   const handleClick = () => {
     if (!listening) {
       SpeechRecognition.startListening();
@@ -76,9 +80,30 @@ const Interview = () => {
     }
   };
 
-  // Fetch AI feedback for user's response
+  // Save user response to MongoDB
+  const saveResponse = async (question, answer) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/save-response", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, answer }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+      console.log("Response saved successfully!");
+    } catch (error) {
+      console.error("Error saving response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save response.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fetch AI feedback for the user's response
   const handleSubmit = async () => {
-    if (transcript.length === 0) {
+    if (!transcript.trim()) {
       toast({
         title: "Error",
         description: "Please provide a response.",
@@ -90,9 +115,23 @@ const Interview = () => {
     setIsLoading(true);
     try {
       const res = await getFeedback({ userResponse: transcript });
+      await saveResponse(aiQuestion, transcript);
+
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
       const data = await res.json();
-      setAiResponse(data.response || "No feedback generated.");
+      const responseText = data.response;
+
+      // Extract scores using regex
+      const clarityMatch = responseText.match(/Clarity Score:\s*(\d+)\/10/);
+      const qualityMatch = responseText.match(/Quality Score:\s*(\d+)\/10/);
+
+      setClarityScore(clarityMatch ? parseInt(clarityMatch[1]) : null);
+      setQualityScore(qualityMatch ? parseInt(qualityMatch[1]) : null);
+
+      // Extract AI feedback (excluding scores)
+      setAiFeedback(
+        responseText.replace(/Clarity Score:.*|Quality Score:.*/g, "").trim()
+      );
     } catch (error) {
       console.error("Error:", error);
       toast({
@@ -125,12 +164,6 @@ const Interview = () => {
                 <p className="text-lg font-medium mb-2">Current Question:</p>
                 <p className="text-gray-700">{aiQuestion}</p>
               </div>
-              {aiResponse && (
-                <div className="bg-blue-50 p-6 rounded-lg">
-                  <p className="text-lg font-medium mb-2">AI Feedback:</p>
-                  <p className="text-gray-700">{aiResponse}</p>
-                </div>
-              )}
               <p className="text-lg font-medium">Your Response:</p>
               {seconds != 0 && (
                 <>
@@ -172,6 +205,27 @@ const Interview = () => {
                   <Send className="w-5 h-5" />
                   Submit Response
                 </Button>
+
+                {aiFeedback && (
+                  <div className="bg-blue-50 p-6 rounded-lg">
+                    <p className="text-lg font-medium mb-2">AI Feedback:</p>
+                    <p className="text-gray-700">{aiFeedback}</p>
+                  </div>
+                )}
+
+                {(clarityScore !== null || qualityScore !== null) && (
+                  <div className="bg-blue-50 p-6 rounded-lg">
+                    <p className="text-lg font-medium mb-2">
+                      Evaluation Scores Out of 10:
+                    </p>
+                    <p className="text-gray-700">
+                      <strong>Clarity Score :</strong> {clarityScore ?? "N/A"}
+                    </p>
+                    <p className="text-gray-700">
+                      <strong>Quality Score:</strong> {qualityScore ?? "N/A"}
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

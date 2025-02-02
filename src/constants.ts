@@ -27,8 +27,13 @@ export const getFeedback = async ({ userResponse }) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: MY_MODEL,
-      prompt: `You're currently roleplaying as an interviewer. Evaluate the answer like you were directly talking to the interviewee. When giving your answer, no need to acknowledge the fact that you will do what I asked. Please give the answer directly and make it succinct. if the user's response is too short, don't try to evaluate their response. simply say that there was not enough context and they should provide more detail. give a clarity and quality score of the answer.
-       ${userResponse}`,
+      prompt: `You're currently roleplaying as an interviewer. Evaluate the answer like you were directly talking to the interviewee. When giving your answer, no need to acknowledge the fact that you will do what I asked. Please give the answer directly and make it succinct. if the user's response is too short, don't try to evaluate their response. simply say that there was not enough context and they should provide more detail.
+          
+      At the end, include:
+      Clarity Score: X/10
+      Quality Score: Y/10
+      
+      ${userResponse}`,
       stream: false,
     }),
   });
