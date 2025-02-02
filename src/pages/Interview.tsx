@@ -1,71 +1,28 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { Mic, MicOff, Send } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
-import { useStopwatch } from "react-timer-hook";
+import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 const Interview = () => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [userResponse, setUserResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [aiQuestion, setAiQuestion] = useState("Generating a question...");
   const [aiResponse, setAiResponse] = useState("");
   const { toast } = useToast();
 
-  // Fetch AI-generated question
-  const fetchAiQuestion = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("http://localhost:11434/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama3:latest",
-          prompt: "Generate a behavioral interview question without saying here is... ",
-          stream: false,
-        }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-      const data = await res.json();
-      setAiQuestion(data.response || "Failed to generate a question.");
-    } catch (error) {
-      console.error("Error:", error);
-      setAiQuestion("Error fetching question.");
-    } finally {
-      setIsLoading(false);
-    }
+  const toggleRecording = () => {
+    setIsRecording(!isRecording);
   };
 
-  const { transcript, listening, browserSupportsSpeechRecognition } =
-    useSpeechRecognition();
-
-  if (!browserSupportsSpeechRecognition) {
-    return <span>Browser doesn't support speech recognition.</span>;
-    // TODO: render a textarea input instead
-  }
-
-  const { seconds, minutes, start, pause } = useStopwatch();
-
-  const handleClick = () => {
-    if (!listening) {
-      SpeechRecognition.startListening();
-      start();
-    } else {
-      SpeechRecognition.stopListening();
-      pause();
-    }
-  };
-
-  // Fetch AI feedback for user's response
   const handleSubmit = async () => {
-    if (transcript.length === 0) {
+    if (!userResponse.trim()) {
       toast({
         title: "Error",
-        description: "Please provide a response.",
+        description: "Please provide a response before submitting.",
         variant: "destructive",
       });
       return;
@@ -73,25 +30,34 @@ const Interview = () => {
 
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:11434/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama3:latest",
-          prompt: `You're currently roleplaying as an interviewer. Evaluate the answer like you were directly talking to the interviewee. When giving your answer, no need to acknowledge the fact that you will do what I asked. Please give the answer directly and make it succinct. if the user's response is too short, don't try to evaluate their response. simply say that there was not enough context and they should provide more detail. give a clarity and quality score of the answer.
-           ${transcript}`,
-          stream: false,
-        }),
+      const { data, error } = await supabase.functions.invoke('chat-with-ai', {
+        body: { prompt: userResponse },
       });
 
-      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-      const data = await res.json();
-      setAiResponse(data.response || "No feedback generated.");
+      if (error) {
+        // Check if it's a quota error
+        if (error.status === 402) {
+          toast({
+            title: "API Quota Exceeded",
+            description: "The AI service is currently unavailable due to quota limits. Please try again later.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setAiResponse(data.response);
+      setUserResponse("");
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error);
       toast({
         title: "Error",
-        description: "Failed to get AI response.",
+        description: "Failed to get AI response. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -99,45 +65,44 @@ const Interview = () => {
     }
   };
 
-  // Fetch question on first render
-  useEffect(() => {
-    fetchAiQuestion();
-  }, []);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="container py-8">
         <Card className="max-w-3xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">
-              Mock Interview Session
-            </CardTitle>
+            <CardTitle className="text-2xl text-center">Mock Interview Session</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="bg-gray-100 p-6 rounded-lg">
               <p className="text-lg font-medium mb-2">Current Question:</p>
-              <p className="text-gray-700">{aiQuestion}</p>
+              <p className="text-gray-700">
+                Tell me about a challenging project you worked on and how you overcame obstacles.
+              </p>
             </div>
+
             {aiResponse && (
               <div className="bg-blue-50 p-6 rounded-lg">
                 <p className="text-lg font-medium mb-2">AI Feedback:</p>
                 <p className="text-gray-700">{aiResponse}</p>
               </div>
             )}
-            <p>Your response: {transcript}</p>
-            <br />
-            <span>{minutes}</span>:<span>{seconds}</span>
+
+            <Textarea
+              placeholder="Type your response here..."
+              value={userResponse}
+              onChange={(e) => setUserResponse(e.target.value)}
+              className="min-h-[120px]"
+            />
+
             <div className="flex justify-center gap-4">
               <Button
-                onClick={handleClick}
+                onClick={toggleRecording}
                 className={`${
-                  listening
-                    ? "bg-red-500 hover:bg-red-600"
-                    : "bg-secondary hover:bg-secondary/90"
+                  isRecording ? "bg-red-500 hover:bg-red-600" : "bg-secondary hover:bg-secondary/90"
                 } px-8 py-6 text-lg rounded-full flex items-center gap-2`}
               >
-                {listening ? (
+                {isRecording ? (
                   <>
                     <MicOff className="w-5 h-5" />
                     Stop Recording
@@ -152,11 +117,11 @@ const Interview = () => {
 
               <Button
                 onClick={handleSubmit}
-                disabled={isLoading || transcript.length == 0}
+                disabled={isLoading || !userResponse.trim()}
                 className="bg-primary hover:bg-primary/90 px-8 py-6 text-lg rounded-full flex items-center gap-2"
               >
                 <Send className="w-5 h-5" />
-                Submit Response
+                {isLoading ? 'Processing...' : 'Submit Response'}
               </Button>
             </div>
           </CardContent>
