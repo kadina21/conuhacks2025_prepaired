@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
 import { BarChart3, Clock, ThumbsUp } from "lucide-react";
-import { getAdvice } from "@/constants";
+import { getAdvice, LEETCODE_QUESTIONS } from "@/constants";
 import { useEffect, useState } from "react";
 
 const Dashboard = () => {
@@ -22,6 +22,22 @@ const Dashboard = () => {
   useEffect(() => {
     fetchAdvice();
   }, []);
+
+  const questions = getRandomQuestions(LEETCODE_QUESTIONS);
+
+  function getRandomQuestions(
+    questions: string[],
+    numQuestions: number = 3
+  ): string[] {
+    const shuffled = [...questions];
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; // Swap elements
+    }
+
+    return shuffled.slice(0, numQuestions);
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -67,7 +83,17 @@ const Dashboard = () => {
         <h2 className="text-xl font-bold mb-4">
           Your interview is coming up in {INTERVIEW_DAYS_AWAY} days!
         </h2>
-        <p>{advice}</p>
+        <p className="mb-4">{advice}</p>
+        <h3 className="mb-4">
+          For some technical prep, try out these questions today:
+        </h3>
+        <ul className="flex flex-col gap-2">
+          {questions.map((q) => (
+            <a className="underline" href="https://leetcode.com/problemset/">
+              {q}
+            </a>
+          ))}
+        </ul>
       </div>
     </div>
   );
