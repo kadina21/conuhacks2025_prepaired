@@ -53,11 +53,22 @@ const Interview = () => {
     // TODO: render a textarea input instead
   }
 
-  const { seconds, minutes, start, pause } = useStopwatch();
+  useEffect(() => {
+    if (listening) {
+      SpeechRecognition.startListening();
+      start();
+    } else if (!listening) {
+      SpeechRecognition.stopListening();
+      pause();
+    }
+  }, [listening]);
+
+  const { seconds, minutes, start, pause, reset } = useStopwatch();
 
   const handleClick = () => {
     if (!listening) {
       SpeechRecognition.startListening();
+      reset();
       start();
     } else {
       SpeechRecognition.stopListening();
@@ -103,7 +114,7 @@ const Interview = () => {
             <LoadingSpinner />
           </div>
         ) : (
-          <Card className="max-w-3xl mx-auto">
+          <Card className="max-w-3xl mx-auto animate-fadeIn">
             <CardHeader>
               <CardTitle className="text-2xl text-center">
                 Mock Interview Session: {selectedRole}
@@ -120,9 +131,16 @@ const Interview = () => {
                   <p className="text-gray-700">{aiResponse}</p>
                 </div>
               )}
-              <p>Your response: {transcript}</p>
-              <br />
-              <span>{minutes}</span>:<span>{seconds}</span>
+              <p className="text-lg font-medium">Your Response:</p>
+              {seconds != 0 && (
+                <>
+                  <p className="m-0">{transcript}</p>
+                  <div>
+                    <span>{String(minutes).padStart(2, "0")}</span>:
+                    <span>{String(seconds).padStart(2, "0")}</span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-center gap-4">
                 <Button
                   onClick={handleClick}
@@ -131,6 +149,7 @@ const Interview = () => {
                       ? "bg-red-500 hover:bg-red-600"
                       : "bg-secondary hover:bg-secondary/90"
                   } px-8 py-6 text-lg rounded-full flex items-center gap-2`}
+                  disabled={listening}
                 >
                   {listening ? (
                     <>
